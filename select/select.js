@@ -1,4 +1,4 @@
-const getTemplate = (data = [], placeholder = "") => {
+const getTemplate = (data = [], placeholder = "", current) => {
     const items = data.map(item => `
         <li class="select__item" data-type="item" data-id="${item.id}">${item.value}</li>
     `);
@@ -6,7 +6,7 @@ const getTemplate = (data = [], placeholder = "") => {
     return `
     <div class="select__backdrop" data-type="backdrop"></div>
     <div class="select__input" data-type="input">
-        <span data-type="value">${placeholder}</span>
+        <span data-type="value">${current.value ?? placeholder}</span>
         <i class="fa fa-chevron-down" aria-hidden="true" data-type="arrow"></i>
     </div>
     <div class="select__dropdown">
@@ -20,22 +20,23 @@ const getTemplate = (data = [], placeholder = "") => {
 export class Select {
     constructor(selector, options) {
         this.$select = document.querySelector(selector);
+        this.$select.addEventListener("click", this.#clickHandler.bind(this));
+        this.$select.classList.add("select");
         this.options = options;
+        this.selectedId = options.selectedId;
+
         this.#render();
 
-        this.$list = this.$select.querySelector("[data-type='list']");
-        this.$value = this.$select.querySelector("[data-type='value']");
-        this.$arrow = this.$select.querySelector("[data-type='arrow']");
-
-        this.#setup();
-        this.selectedId = options.selectedId;
         this.select(this.selectedId);
     }
 
     #render() {
         const { placeholder, data } = this.options;
-        this.$select.classList.add("select");
-        this.$select.innerHTML = getTemplate(data, placeholder);
+        this.$select.innerHTML = getTemplate(data, placeholder, this.current);
+
+        this.$list = this.$select.querySelector("[data-type='list']");
+        this.$value = this.$select.querySelector("[data-type='value']");
+        this.$arrow = this.$select.querySelector("[data-type='arrow']");
     }
 
     #clickHandler(e) {
@@ -57,10 +58,6 @@ export class Select {
                 this.close();
                 break;
         }
-    }
-
-    #setup() {
-        this.$select.addEventListener("click", this.#clickHandler.bind(this));
     }
 
     toggle() {
@@ -85,7 +82,6 @@ export class Select {
         this.$select.querySelectorAll("[data-type='item']").forEach(item => item.classList.remove("select__item_selected"));
         this.$select.querySelector(`[data-id='${this.selectedId}']`).classList.add("select__item_selected");
         this.$value.textContent = this.current.value;
-        // this.$select.querySelector("[data-type='value']").textContent = this.current.value;
 
         if (this.options.onSelect) {
             this.options.onSelect(this.current);
@@ -99,10 +95,13 @@ export class Select {
 
     add(item) {
         this.options.data.push(item);
-        this.$list.innerHTML += `
-            <li class="select__item" data-type="item" data-id="${item.id}">${item.value}</li>
-        `;
-        // this.#render();
+        this.#render();
+    }
+
+    delete(id) {
+        const indexToDel = this.options.data.filter((item, index) => item.id === id);
+        this.options.data.splice(indexToDel, 1);
+        this.#render();
     }
 
     destroy() {

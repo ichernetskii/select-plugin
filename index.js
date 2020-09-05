@@ -17,5 +17,6 @@ const select = new Select("#select", {
 });
 
 select.add({id: 6, value: "C#"});
+select.delete(1);
 
 window.s = select;
