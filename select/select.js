@@ -99,8 +99,7 @@ export class Select {
     }
 
     delete(id) {
-        const indexToDel = this.options.data.filter((item, index) => item.id === id);
-        this.options.data.splice(indexToDel, 1);
+        this.options.data = this.options.data.filter(item => item.id !== id);
         this.#render();
     }
 
